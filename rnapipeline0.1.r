@@ -19,8 +19,8 @@ read2=paste0(dir,targets$InputFile2)
 index=paste0("/csc/skhadaya/resources/",unlist(strsplit(args[7],"="))[2])
 
 # align reads
-subjunc(index=index,readfile1=read1,readfile2=read2,input_format="gzFASTQ",output_format="BAM",output_file=targets$OutputFile,nthreads=8,tieBreakHamming=TRUE,unique=TRUE,indels=5)
-
+#subjunc(index=index,readfile1=read1,readfile2=read2,input_format="gzFASTQ",output_format="BAM",output_file=targets$OutputFile,nthreads=8,tieBreakHamming=TRUE,unique=TRUE,indels=5)
+subjunc(index=index,readfile1=read1,input_format="gzFASTQ",output_format="BAM",output_file=targets$OutputFile,nthreads=8,tieBreakHamming=TRUE,unique=TRUE,indels=5)
 pdf(file="plots.pdf")
 
 
