@@ -63,6 +63,7 @@ A <- rowSums(dge$counts)
 dge <- dge[A>10,,keep.lib.sizes=FALSE]
 dge <- calcNormFactors(dge)
 
+design <- model.matrix(~targets$Group)
 v <- voom(dge,design,plot=TRUE)
  fit <- lmFit(v,design)
 
