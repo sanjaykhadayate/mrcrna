@@ -30,7 +30,7 @@ pdf(file="plots.pdf")
 
 
 # count numbers of reads mapped to NCBI Refseq genes
-fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=unlist(strsplit(args[7],"="))[2],nthreads=8,isPairedEnd=unlist(strsplit(args[12],"="))[2])
+fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=unlist(strsplit(args[7],"="))[2],nthreads=8,strandSpecific=unlist(strsplit(args[8],"="))[2],isPairedEnd=unlist(strsplit(args[12],"="))[2])
 
 #design<-if (unlist(strsplit(args[9],"="))[2] == "") formula(~unlist(strsplit(args[9],"="))[2]) else formula(~unlist(strsplit(args[9],"="))[2]+unlist(strsplit(args[10],"="))[2])
 #strsplit(args[9],"=")[2]
@@ -53,7 +53,7 @@ resOrdered<-res[order(res$padj),]
 
 dev.off()
 write.table(resOrdered,file="DEgenes.txt",sep="\t")
-fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=unlist(strsplit(args[7],"="))[2],nthreads=8,isPairedEnd=unlist(strsplit(args[12],"="))[2],GTF.featureType="exon", GTF.attrType="ID",
+fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=unlist(strsplit(args[7],"="))[2],nthreads=8,strandSpecific=unlist(strsplit(args[8],"="))[2],isPairedEnd=unlist(strsplit(args[12],"="))[2],GTF.featureType="exon", GTF.attrType="ID",
 useMetaFeatures=FALSE, allowMultiOverlap=TRUE)
 
 dge <- DGEList(counts=fc$counts, genes=fc$annotation)
