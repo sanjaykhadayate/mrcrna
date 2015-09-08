@@ -69,9 +69,9 @@ v <- voom(dge,design,plot=TRUE)
 ex <- diffSplice(fit, geneid="GeneID")
 
 
-spliced<-topSplice(ex,coef=2,level="gene")
+spliced<-topSplice(ex,coef=2,test="F")
 
-altUsed<-topSplice(ex,coef=2,level="exon")
+altUsed<-topSplice(ex,coef=2,test="t")
 
 write.table(spliced,file="AltSplicedgenes.txt",sep="\t")
 write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
