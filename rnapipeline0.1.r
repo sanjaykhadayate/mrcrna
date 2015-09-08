@@ -23,8 +23,7 @@ if (unlist(strsplit(args[12],"="))[2] == TRUE)
 {
 subjunc(index=index,readfile1=read1,readfile2=read2,input_format="gzFASTQ",output_format="BAM",output_file=targets$OutputFile,nthreads=8,tieBreakHamming=TRUE,unique=TRUE,indels=5)
 
-}
-else {
+}else {
 subjunc(index=index,readfile1=read1,input_format="gzFASTQ",output_format="BAM",output_file=targets$OutputFile,nthreads=8,tieBreakHamming=TRUE,unique=TRUE,indels=5)
 }
 pdf(file="plots.pdf")
