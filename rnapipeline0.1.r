@@ -80,5 +80,25 @@ altUsed<-topSplice(ex,coef=2,test="t")
 write.table(spliced,file="AltSplicedgenes.txt",sep="\t")
 write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
 
+# GO analysis
+  library(goseq)
+  anno_version=unlist(strsplit(args[7],"="))[2];
+
+  newX<- resOrdered[complete.cases(resOrdered$padj),]
+  degenes<-as.integer(newX$padj<0.5)
+  names(degenes)<-rownames(newX)
+  # remove duplicate gene names
+  degenes<-degenes[match(unique(names(degenes)),names(degenes))]
+  table(degenes)
+   # GO analysis
+  # (1) fitting the probability weighting function (PWF)
+    pwf=nullp(degenes,anno_version,'knownGene')
+    # nullp: probability weighting function
+  # (2) Using the Wallenius approximation
+    GO.wall=goseq(pwf,anno_version,'knownGene')
+    write.csv(GO.wall,file="GO_Wallenius.csv",row.names=F)
+    KEGGpath=goseq(pwf2,anno_version,'knownGene',test.cats="KEGG")
+    write.csv(KEGGpath,file="Kegg_Wallenius.csv",row.names=F)
+
 
 sessionInfo()
