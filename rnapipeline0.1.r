@@ -80,7 +80,7 @@ altUsed<-topSplice(ex,coef=2,test="t")
 write.table(spliced,file="AltSplicedgenes.txt",sep="\t")
 write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
 
-# functional analysis
+# functional analysis for DE genes
   library(goseq)
   anno_version=unlist(strsplit(args[7],"="))[2];
   
