@@ -95,10 +95,22 @@ write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
     pwf=nullp(degenes,anno_version,'knownGene')
     # nullp: probability weighting function
   # (2) Using the Wallenius approximation
-    GO.wall=goseq(pwf,anno_version,'knownGene')
-    write.csv(GO.wall,file="GO_Wallenius.csv",row.names=F)
-    KEGGpath=goseq(pwf,anno_version,'knownGene',test.cats="KEGG")
-    write.csv(KEGGpath,file="Kegg_Wallenius.csv",row.names=F)
+    # change the Keggpath id to name in the goseq output
+    library(KEGG.db)
+    xx <- as.list(KEGGPATHID2NAME)
+    temp <- cbind(names(xx),unlist(xx))
+    addKeggTogoseq <- function(JX,temp){
+      for(l in 1:nrow(JX)){
+        if(JX[l,1] %in% temp[,1]){
+          JX[l,"term"] <- temp[temp[,1] %in% JX[l,1],2]
+          JX[l,"ontology"] <- "KEGG"
+        }
+      }
+      return(JX)
+    }
+    functional_analysis=goseq(pwf,anno_version,'knownGene',test.cats=c("GO:BP","GO:MF","KEGG"))
+    restemp<-addKeggTogoseq(functional_analysis,temp)    # switch Keggpathid to name
+    write.table(restemp,file="GO_Kegg_Wallenius.txt",row.names=F,sep="\t")
 
 
 sessionInfo()
