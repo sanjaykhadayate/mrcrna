@@ -1,6 +1,6 @@
 #file:config.r
 
-file<-"targets.txt"
+targets<-"targets.txt"
 genome<-"mm9" 
 strandspecific<-0 
 factor1<-"Group"
