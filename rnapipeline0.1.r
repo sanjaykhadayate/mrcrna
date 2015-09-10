@@ -4,22 +4,23 @@ library(limma)
 library(edgeR)
 library(DESeq2)
 
+source("config.R")
 
-args<- commandArgs()
-print(args)
+#args<- commandArgs()
+#print(args)
 
 # read in target file
-targets <- readTargets(unlist(strsplit(args[6],"="))[2])
+targets <- readTargets(targets)
 targets
 
 
-dir=unlist(strsplit(args[11],"="))[2]
+#dir=unlist(strsplit(args[11],"="))[2]
 read1=paste0(dir,targets$InputFile)
 read2=paste0(dir,targets$InputFile2)
-index=paste0("/csc/skhadaya/resources/",unlist(strsplit(args[7],"="))[2])
+index=paste0("/csc/skhadaya/resources/",genome)
 
 # align reads
-if (unlist(strsplit(args[12],"="))[2] == TRUE)
+if (isPairedEnd == TRUE)
 {
 subjunc(index=index,readfile1=read1,readfile2=read2,input_format="gzFASTQ",output_format="BAM",output_file=targets$OutputFile,nthreads=10,tieBreakHamming=TRUE,unique=TRUE,indels=5)
 
@@ -34,12 +35,8 @@ pdf(file="plots.pdf")
 
 
 # count numbers of reads mapped to NCBI Refseq genes
-fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=unlist(strsplit(args[7],"="))[2],nthreads=8,strandSpecific=unlist(strsplit(args[8],"="))[2],isPairedEnd=unlist(strsplit(args[12],"="))[2])
+fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=genome,nthreads=10,strandSpecific=strandspecific,isPairedEnd=isPairedEnd)
 
-#design<-if (unlist(strsplit(args[9],"="))[2] == "") formula(~unlist(strsplit(args[9],"="))[2]) else formula(~unlist(strsplit(args[9],"="))[2]+unlist(strsplit(args[10],"="))[2])
-#strsplit(args[9],"=")[2]
-
-#design<-formula(~(unlist(strsplit(args[9],"="))[2]))
 design<-formula(~Group)
 
 
@@ -57,10 +54,10 @@ resOrdered<-res[order(res$padj),]
 
 dev.off()
 write.table(resOrdered,file="DEgenes.txt",sep="\t")
-fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=unlist(strsplit(args[7],"="))[2],nthreads=8,strandSpecific=unlist(strsplit(args[8],"="))[2],isPairedEnd=unlist(strsplit(args[12],"="))[2],GTF.featureType="exon", GTF.attrType="ID",
+fcexo <-featureCounts(files=targets$OutputFile,annot.inbuilt=genome,nthreads=8,strandSpecific=strandspecific,isPairedEnd=isPairedEnd,GTF.featureType="exon", GTF.attrType="ID",
 useMetaFeatures=FALSE, allowMultiOverlap=TRUE)
 
-dge <- DGEList(counts=fc$counts, genes=fc$annotation)
+dge <- DGEList(counts=fcexo$counts, genes=fcexo$annotation)
 
 A <- rowSums(dge$counts)
 dge <- dge[A>10,,keep.lib.sizes=FALSE]
@@ -82,7 +79,7 @@ write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
 
 # functional analysis for DE genes
   library(goseq)
-  anno_version=unlist(strsplit(args[7],"="))[2];
+  anno_version=genome;
   
   newX<- resOrdered[complete.cases(resOrdered$padj),]
   degenes<-as.integer(newX$padj<0.05)
