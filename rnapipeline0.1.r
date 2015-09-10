@@ -85,7 +85,7 @@ write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
   anno_version=unlist(strsplit(args[7],"="))[2];
   
   newX<- resOrdered[complete.cases(resOrdered$padj),]
-  degenes<-as.integer(newX$padj<0.5)
+  degenes<-as.integer(newX$padj<0.05)
   names(degenes)<-rownames(newX)
   # remove duplicate gene names
   degenes<-degenes[match(unique(names(degenes)),names(degenes))]
