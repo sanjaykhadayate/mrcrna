@@ -80,7 +80,7 @@ altUsed<-topSplice(ex,coef=2,test="t")
 write.table(spliced,file="AltSplicedgenes.txt",sep="\t")
 write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
 
-# GO analysis
+# functional analysis
   library(goseq)
   anno_version=unlist(strsplit(args[7],"="))[2];
   
@@ -90,7 +90,7 @@ write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
   # remove duplicate gene names
   degenes<-degenes[match(unique(names(degenes)),names(degenes))]
   table(degenes)
-  # GO analysis
+  # GO and kegg analysis
   # (1) fitting the probability weighting function (PWF)
     pwf=nullp(degenes,anno_version,'knownGene')
     # nullp: probability weighting function
