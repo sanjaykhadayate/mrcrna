@@ -60,7 +60,7 @@ dds<-DESeq(dds)
  mycols <- brewer.pal(8, "Dark2")[1:length(unique(colData(dds)$Group))]
  showcol<-mycols
  names(showcol)<-unique(colData(dds)$Group)
- pcafromdeseq2<-plotPCA(rlogvalue, intgroup="Group") +
+ pcafromdeseq2<-plotPCA(rlogvalue, intgroup="Group",returnData=T) +
              geom_hline(yintercept=0, colour="gray65")+
              geom_vline(xintercept=0, colour="gray65")+
              ggtitle("PCA plot")+
