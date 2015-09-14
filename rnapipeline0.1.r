@@ -31,8 +31,6 @@ subjunc(index=index,readfile1=read1,input_format="gzFASTQ",output_format="BAM",o
 alignstats<-propmapped(targets$OutputFile,countFragments=TRUE,properlyPaired=FALSE)
 write.table(alignstats,file="AlignmentSummary.txt",sep="\t")
 
-pdf(file="plots.pdf")
-
 
 # count numbers of reads mapped to NCBI Refseq genes
 fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=genome,nthreads=10,strandSpecific=strandspecific,isPairedEnd=isPairedEnd)
@@ -81,6 +79,8 @@ dds<-DESeq(dds)
 ##########
 ## DE analysis
 ##########
+
+pdf(file="plots.pdf")
 
 res<-results(dds)
 resOrdered<-res[order(res$padj),]
