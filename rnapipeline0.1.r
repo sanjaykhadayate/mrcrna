@@ -49,6 +49,39 @@ dds<-DESeqDataSetFromMatrix(countData= fc$counts,colData= targets,design=design)
 
 dds<-DESeq(dds)
 
+#####
+# Quality control
+#####
+ # 1. sample distance plot
+ # 2. PCA plot
+ rlogvalue <- rlog(dds)
+ rlogcount <- assay(rlogvalue)
+ rlogcount <- rlogcount[!rowSums(rlogcount) == 0,]
+ colnames(rlogcount) <-  paste0(colData(dds)$sample)
+ library("RColorBrewer")
+ mycols <- brewer.pal(8, "Dark2")[1:length(unique(colData(dds)$Group))]
+ showcol<-mycols
+ names(showcol)<-unique(colData(dds)$Group)
+ pcafromdeseq2<-plotPCA(rlogvalue, intgroup="Group") +
+             geom_hline(yintercept=0, colour="gray65")+
+             geom_vline(xintercept=0, colour="gray65")+
+             ggtitle("PCA plot")+
+             scale_colour_manual(values=showcol)
+ ggsave(pcafromdeseq2,file="qc_PCAplot.pdf")
+ 
+ sampleDists <- as.matrix(dist(t(rlogcount)))
+ library(gplots)
+ png("qc_heatmap_samples.png", w=1000, h=1000, pointsize=20)
+ heatmap.2(as.matrix(sampleDists), key=F, trace="none",
+           col=colorpanel(100, "black", "white"),
+           ColSideColors=mycols[colData(dds)$Group], RowSideColors=mycols[colData(dds)$Group],
+           margin=c(10, 10), main="Sample Distance Matrix")
+ dev.off()
+ 
+##########
+## DE analysis
+##########
+
 res<-results(dds)
 resOrdered<-res[order(res$padj),]
 
