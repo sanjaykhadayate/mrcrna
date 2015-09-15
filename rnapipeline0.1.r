@@ -4,7 +4,7 @@ library(limma)
 library(edgeR)
 library(DESeq2)
 
-source("config.R")
+source("config.r")
 
 #args<- commandArgs()
 #print(args)
