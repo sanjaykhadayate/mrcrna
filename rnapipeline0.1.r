@@ -13,11 +13,11 @@ source("config.r")
 targets <- readTargets(targets)
 targets
 
-
 #dir=unlist(strsplit(args[11],"="))[2]
 read1=paste0(dir,targets$InputFile)
 read2=paste0(dir,targets$InputFile2)
 
+# use the igenome information
 genomeIndex = list("hg19"="/csc/rawdata/Cscbioinf/bioinfResources/Homo_sapiens/Ensembl/GRCh37/Sequence/SubreadIndex/hg19_index",
                  "mm9"="/csc/rawdata/Cscbioinf/bioinfResources/mm9/Mus_musculus/Ensembl/NCBIM37/Sequence/SubreadIndex/mm9_index")
 index=genomeIndex[[genome]]
