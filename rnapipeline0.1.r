@@ -18,8 +18,8 @@ read1=paste0(dir,targets$InputFile)
 read2=paste0(dir,targets$InputFile2)
 
 # use the igenome information
-genomeIndex = list("hg19"="/csc/rawdata/Cscbioinf/bioinfResources/Homo_sapiens/Ensembl/GRCh37/Sequence/SubreadIndex/hg19_index",
-                 "mm9"="/csc/rawdata/Cscbioinf/bioinfResources/mm9/Mus_musculus/Ensembl/NCBIM37/Sequence/SubreadIndex/mm9_index")
+genomeIndex = list("hg19"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Homo_sapiens/Ensembl/GRCh37/Sequence/SubreadIndex/hg19_index",
+                   "mm9"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/Ensembl/NCBIM37/Sequence/SubreadIndex/mm9_index")
 index=genomeIndex[[genome]]
 
 # align reads
