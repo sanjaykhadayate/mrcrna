@@ -34,12 +34,19 @@ subjunc(index=index,readfile1=read1,input_format="gzFASTQ",output_format="BAM",o
 alignstats<-propmapped(targets$OutputFile,countFragments=TRUE,properlyPaired=FALSE)
 write.table(alignstats,file="AlignmentSummary.txt",sep="\t")
 
-
-# count numbers of reads mapped to NCBI Refseq genes
-fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=genome,nthreads=10,strandSpecific=strandspecific,isPairedEnd=isPairedEnd)
+# count numbers of reads mapped to iGenome genes
+gtfGFiles = list("hg19UCSC"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Homo_sapiens/UCSC/hg19/Annotation/Genes/genes.gtf",
+              "mm9UCSC"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/UCSC/mm9/Annotation/Genes/genes.gtf",
+              "hg19"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Homo_sapiens/Ensembl/GRCh37/Annotation/Genes/genes.gtf",
+              "mm9"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/Ensembl/NCBIM37/Annotation/Genes/genes.gtf")
+anno_for_featurecount<-gtfGFiles[[genome]]
+fc <-featureCounts(files=targets$OutputFile,annot.ext=anno_for_featurecount,
+                        isGTFAnnotationFile=TRUE,GTF.featureType="exon",
+                        GTF.attrType="gene_id",nthreads=10,strandSpecific=strandspecific,
+                        isPairedEnd=isPairedEnd)
+#fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=genome,nthreads=10,strandSpecific=strandspecific,isPairedEnd=isPairedEnd)
 
 design<-formula(~Group)
-
 
 colData<-cbind(targets$OutputFile,targets$Group)
 rownames(colData)<-colData[,1]
