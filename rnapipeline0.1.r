@@ -115,7 +115,6 @@ write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
 
 # functional analysis for DE genes
   library(goseq)
-  anno_version=genome;
   
   newX<- resOrdered[complete.cases(resOrdered$padj),]
   degenes<-as.integer(newX$padj<0.05)
@@ -125,7 +124,7 @@ write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
   table(degenes)
   # GO and kegg analysis
   # (1) fitting the probability weighting function (PWF)
-    pwf=nullp(degenes,anno_version,'knownGene')
+    pwf=nullp(degenes,genome,'knownGene')
     # nullp: probability weighting function
   # (2) Using the Wallenius approximation
     # change the Keggpath id to name in the goseq output
@@ -141,7 +140,7 @@ write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
       }
       return(JX)
     }
-    functional_analysis=goseq(pwf,anno_version,'knownGene',test.cats=c("GO:BP","GO:MF","KEGG"))
+    functional_analysis=goseq(pwf,genome,'ensGene',test.cats=c("GO:BP","GO:MF","KEGG"))
     restemp<-addKeggTogoseq(functional_analysis,temp)    # switch Keggpathid to name
     write.table(restemp,file="GO_Kegg_Wallenius.txt",row.names=F,sep="\t")
 
