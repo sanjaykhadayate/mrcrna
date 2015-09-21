@@ -97,8 +97,10 @@ resOrdered<-res[order(res$padj),]
 
 dev.off()
 write.table(resOrdered,file="DEgenes.txt",sep="\t")
-fcexo <-featureCounts(files=targets$OutputFile,annot.inbuilt=genome,nthreads=8,strandSpecific=strandspecific,isPairedEnd=isPairedEnd,GTF.featureType="exon", GTF.attrType="ID",
-useMetaFeatures=FALSE, allowMultiOverlap=TRUE)
+#fcexo <-featureCounts(files=targets$OutputFile,annot.inbuilt=genome,nthreads=8,strandSpecific=strandspecific,isPairedEnd=isPairedEnd,GTF.featureType="exon", GTF.attrType="ID",useMetaFeatures=FALSE, allowMultiOverlap=TRUE)
+fcexo<-featureCounts(files=targets$OutputFile,annot.ext=anno_for_featurecount,strandSpecific=strandspecific,
+                    isGTFAnnotationFile=TRUE,GTF.featureType="exon",GTF.attrType="exon_id",nthreads=8,
+                    isPairedEnd=isPairedEnd,useMetaFeatures=FALSE, allowMultiOverlap=TRUE)
 
 dge <- DGEList(counts=fcexo$counts, genes=fcexo$annotation)
 
