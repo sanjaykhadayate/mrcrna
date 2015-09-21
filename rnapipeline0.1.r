@@ -19,7 +19,8 @@ read2=paste0(dir,targets$InputFile2)
 
 # use the igenome information
 genomeIndex = list("hg19"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Homo_sapiens/Ensembl/GRCh37/Sequence/SubreadIndex/hg19_index",
-                   "mm9"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/Ensembl/NCBIM37/Sequence/SubreadIndex/mm9_index")
+                   "mm9"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/Ensembl/NCBIM37/Sequence/SubreadIndex/mm9_index",
+                   "dm3"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Drosophila_melanogaster/Ensembl/BDGP5/Sequence/SubreadIndex/bdgp5_index")
 index=genomeIndex[[genome]]
 
 # align reads
