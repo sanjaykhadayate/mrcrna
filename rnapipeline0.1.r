@@ -37,6 +37,7 @@ write.table(alignstats,file="AlignmentSummary.txt",sep="\t")
 # count numbers of reads mapped to iGenome genes
 gtfGFiles = list("hg19UCSC"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Homo_sapiens/UCSC/hg19/Annotation/Genes/genes.gtf",
               "mm9UCSC"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/UCSC/mm9/Annotation/Genes/genes.gtf",
+              "dm3"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Drosophila_melanogaster/Ensembl/BDGP5/Annotation/Genes/genes.gtf",
               "hg19"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Homo_sapiens/Ensembl/GRCh37/Annotation/Genes/genes.gtf",
               "mm9"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/Ensembl/NCBIM37/Annotation/Genes/genes.gtf")
 anno_for_featurecount<-gtfGFiles[[genome]]
