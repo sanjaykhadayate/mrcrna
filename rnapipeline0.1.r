@@ -124,7 +124,7 @@ write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
   table(degenes)
   # GO and kegg analysis
   # (1) fitting the probability weighting function (PWF)
-    pwf=nullp(degenes,genome,'knownGene')
+    pwf=nullp(degenes,genome,'ensGene')
     # nullp: probability weighting function
   # (2) Using the Wallenius approximation
     # change the Keggpath id to name in the goseq output
