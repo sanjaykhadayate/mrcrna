@@ -19,10 +19,10 @@ read1=paste0(dir,targets$InputFile)
 read2=paste0(dir,targets$InputFile2)
 
 # use the igenome information
-genomeIndex = list("hg19"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Homo_sapiens/Ensembl/GRCh37/Sequence/SubreadIndex/hg19_index",
-                   "mm9"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/Ensembl/NCBIM37/Sequence/SubreadIndex/mm9_index",
-                   "dm3"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Drosophila_melanogaster/Ensembl/BDGP5/Sequence/SubreadIndex/bdgp5_index")
-index=genomeIndex[[genome]]
+genomeIndex = list("hg19"="Homo_sapiens/Ensembl/GRCh37/Sequence/SubreadIndex/hg19_index",
+                   "mm9"="Mus_musculus/Ensembl/NCBIM37/Sequence/SubreadIndex/mm9_index",
+                   "dm3"="Drosophila_melanogaster/Ensembl/BDGP5/Sequence/SubreadIndex/bdgp5_index")
+index=paste0(targets$resource,genomeIndex[[genome]])
 
 # align reads
 if (isPairedEnd == TRUE)
@@ -37,12 +37,12 @@ alignstats<-propmapped(targets$OutputFile,countFragments=TRUE,properlyPaired=FAL
 write.table(alignstats,file="AlignmentSummary.txt",sep="\t")
 
 # count numbers of reads mapped to iGenome genes
-gtfGFiles = list("hg19UCSC"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Homo_sapiens/UCSC/hg19/Annotation/Genes/genes.gtf",
-              "mm9UCSC"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/UCSC/mm9/Annotation/Genes/genes.gtf",
-              "dm3"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Drosophila_melanogaster/Ensembl/BDGP5/Annotation/Genes/genes.gtf",
-              "hg19"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Homo_sapiens/Ensembl/GRCh37/Annotation/Genes/genes.gtf",
-              "mm9"="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/Mus_musculus/Ensembl/NCBIM37/Annotation/Genes/genes.gtf")
-anno_for_featurecount<-gtfGFiles[[genome]]
+gtfGFiles = list("hg19UCSC"="UCSC/hg19/Annotation/Genes/genes.gtf",
+              "mm9UCSC"="Mus_musculus/UCSC/mm9/Annotation/Genes/genes.gtf",
+              "dm3"="Drosophila_melanogaster/Ensembl/BDGP5/Annotation/Genes/genes.gtf",
+              "hg19"="Homo_sapiens/Ensembl/GRCh37/Annotation/Genes/genes.gtf",
+              "mm9"="Mus_musculus/Ensembl/NCBIM37/Annotation/Genes/genes.gtf")
+anno_for_featurecount<-paste0(targets$gtfresource,gtfGFiles[[genome]]
 fc <-featureCounts(files=targets$OutputFile,annot.ext=anno_for_featurecount,isGTFAnnotationFile=TRUE,
                 GTF.featureType="exon",GTF.attrType="gene_id",nthreads=10,
                 strandSpecific=strandspecific,isPairedEnd=isPairedEnd)
