@@ -1,159 +1,179 @@
 # load libraries
-
 library(Rsubread)
 library(limma)
 library(edgeR)
 library(DESeq2)
+library(BiocParallel)
+library(GenomicAlignments)
+library(rtracklayer)
 
 source("config.r")
 
-#args<- commandArgs()
-#print(args)
+# Create output directories
+folders<-c("Alignments","Counts","BigWigs","GeneExpression","QC","Splicing","GeneOntology")
+
+for (i in 1:length(folders))  {
+  dir.create(paste(getwd(),folders[i], sep="/"))
+} 
+
 
 # read in target file
-targets <- readTargets(targets)
+targets <- readTargets(samplesheet)
 targets
 
-#dir=unlist(strsplit(args[11],"="))[2]
-read1=paste0(dir,targets$InputFile)
-read2=paste0(dir,targets$InputFile2)
+#buildindex(basename="mm9",reference="chr1.fa")
 
-# use the igenome information
-genomeIndex = list("hg19"="Homo_sapiens/Ensembl/GRCh37/Sequence/SubreadIndex/hg19_index",
-                   "mm9"="Mus_musculus/Ensembl/NCBIM37/Sequence/SubreadIndex/mm9_index",
-                   "dm3"="Drosophila_melanogaster/Ensembl/BDGP5/Sequence/SubreadIndex/bdgp5_index")
-index=paste0(targets$resource,genomeIndex[[genome]])
+index=paste0(resource,genome)
 
-# align reads
-if (isPairedEnd == TRUE)
+#setup workers
+multicoreParam <- MulticoreParam(threads)
+
+rnaaln <- function(x)
 {
-subjunc(index=index,readfile1=read1,readfile2=read2,input_format="gzFASTQ",output_format="BAM",output_file=targets$OutputFile,nthreads=10,tieBreakHamming=TRUE,unique=TRUE,indels=5)
-
-}else {
-subjunc(index=index,readfile1=read1,input_format="gzFASTQ",output_format="BAM",output_file=targets$OutputFile,nthreads=10,tieBreakHamming=TRUE,unique=TRUE,indels=5)
+  read1=paste0(rawdata,targets[x,]$InputFile)
+  read2=paste0(rawdata,targets[x,]$InputFile2)
+  
+  # align reads
+  if (isPairedEnd == TRUE)
+  {
+    subjunc(index=index,readfile1=read1,readfile2=read2,input_format="gzFASTQ",output_format="BAM",output_file=paste0("Alignments/",targets[x,]$OutputFile),nthreads=threads,unique=TRUE,indels=5)
+    
+  }else {
+    subjunc(index=index,readfile1=read1,input_format="gzFASTQ",output_format="BAM",output_file=paste0("Alignments/",targets$OutputFile),nthreads=threads,unique=TRUE,indels=5)
+  }
 }
 
-alignstats<-propmapped(targets$OutputFile,countFragments=TRUE,properlyPaired=FALSE)
-write.table(alignstats,file="AlignmentSummary.txt",sep="\t")
+getbw <- function(x)
+{
+  Alignments <- readGAlignments(paste0("Alignments/",targets[x,]$OutputFile))
+  Coverage <- coverage(Alignments)
+  export.bw(Coverage[1], paste0("BigWigs/",targets[x,]$sample,".bw")) # exporting chr1
+  
+}
 
-# count numbers of reads mapped to iGenome genes
-gtfGFiles = list("hg19UCSC"="UCSC/hg19/Annotation/Genes/genes.gtf",
-              "mm9UCSC"="Mus_musculus/UCSC/mm9/Annotation/Genes/genes.gtf",
-              "dm3"="Drosophila_melanogaster/Ensembl/BDGP5/Annotation/Genes/genes.gtf",
-              "hg19"="Homo_sapiens/Ensembl/GRCh37/Annotation/Genes/genes.gtf",
-              "mm9"="Mus_musculus/Ensembl/NCBIM37/Annotation/Genes/genes.gtf")
-anno_for_featurecount<-paste0(targets$gtfresource,gtfGFiles[[genome]]
-fc <-featureCounts(files=targets$OutputFile,annot.ext=anno_for_featurecount,isGTFAnnotationFile=TRUE,
-                GTF.featureType="exon",GTF.attrType="gene_id",nthreads=10,
-                strandSpecific=strandspecific,isPairedEnd=isPairedEnd)
-#fc <-featureCounts(files=targets$OutputFile,annot.inbuilt=genome,nthreads=10,strandSpecific=strandspecific,isPairedEnd=isPairedEnd)
+#perform alignments in parallel
+bplapply(seq(nrow(targets)),rnaaln)
 
+# Get bigwigs
+bplapply(seq(nrow(targets)),getbw)
+
+# Alignment statistics
+alignstats<-propmapped(paste0("Alignments/",targets$OutputFile),countFragments=TRUE,properlyPaired=FALSE)
+write.table(alignstats,file=paste0("QC/","AlignmentSummary.txt"),sep="\t")
+
+# count numbers of reads mapped to NCBI Refseq genes
+featureCountsobj <-featureCounts(files=paste0("Alignments/",targets$OutputFile),annot.inbuilt=genome,nthreads=threads,strandSpecific=strandspecific,isPairedEnd=isPairedEnd)
+write.csv(featureCountsobj$counts,file=(paste0("Counts/","Rawcounts.csv")),row.names = T)
+
+if (is.null(factor2))
+{
+Group<-factor1
 design<-formula(~Group)
-
 colData<-cbind(targets$OutputFile,targets$Group)
 rownames(colData)<-colData[,1]
 colnames(colData)<-c("name","Group")
-
 colData<-data.frame(colData)
-dds<-DESeqDataSetFromMatrix(countData= fc$counts,colData= targets,design=design)
+dds<-DESeqDataSetFromMatrix(countData= featureCountsobj$counts,colData= targets,design=design)
+} else {
+  Group1<-factor1
+  Group2<-factor2
+  design<-formula(~Group1 + Group2)
+  colData<-cbind(targets$OutputFile,targets$Group1, targets$Group2)
+  rownames(colData)<-colData[,1]
+  colnames(colData)<-c("name",Group1,Group2)
+  
+  colData<-data.frame(colData)
+  dds<-DESeqDataSetFromMatrix(countData= featureCountsobj$counts,colData= targets,design=design)
+  
+}
 
 dds<-DESeq(dds)
-
-#####
-# Quality control
-#####
- # 1. sample distance plot
- # 2. PCA plot
- rlogvalue <- rlog(dds)
- rlogcount <- assay(rlogvalue)
- rlogcount <- rlogcount[!rowSums(rlogcount) == 0,]
- colnames(rlogcount) <-  paste0(colData(dds)$sample)
- library("RColorBrewer")
- mycols <- brewer.pal(8, "Dark2")[1:length(unique(colData(dds)$Group))]
- showcol<-mycols
- names(showcol)<-unique(colData(dds)$Group)
- pcafromdeseq2<-plotPCA(rlogvalue, intgroup="Group") +
-             geom_hline(yintercept=0, colour="gray65")+
-             geom_vline(xintercept=0, colour="gray65")+
-             ggtitle("PCA plot")+
-             scale_colour_manual(values=showcol)
- ggsave(pcafromdeseq2,file="qc_PCAplot.pdf")
- 
- sampleDists <- as.matrix(dist(t(rlogcount)))
- library(gplots)
- png("qc_heatmap_samples.png", w=1000, h=1000, pointsize=20)
- heatmap.2(as.matrix(sampleDists), key=F, trace="none",
-           col=colorpanel(100, "black", "white"),
-           ColSideColors=mycols[colData(dds)$Group], RowSideColors=mycols[colData(dds)$Group],
-           margin=c(10, 10), main="Sample Distance Matrix")
- dev.off()
- 
-##########
-## DE analysis
-##########
-
-pdf(file="plots.pdf")
 
 res<-results(dds)
 resOrdered<-res[order(res$padj),]
 
+
+write.table(resOrdered,file=paste0("GeneExpression/","DEresult.csv"),sep=",")
+
+# Plot dispersions
+pdf(file=paste0("QC/","qc-plots.pdf"))
+plotDispEsts(dds, main="Dispersion plot")
+
+
+# Regularized log transformation for clustering/heatmaps, etc
+rld <- rlogTransformation(dds)
+head(assay(rld))
+hist(assay(rld))
+plotPCA(rld,intgroup=grep("^Gr",colnames(colData(dds)),value=T))
+
 dev.off()
-write.table(resOrdered,file="DEgenes.txt",sep="\t")
-#fcexo <-featureCounts(files=targets$OutputFile,annot.inbuilt=genome,nthreads=8,strandSpecific=strandspecific,isPairedEnd=isPairedEnd,GTF.featureType="exon", GTF.attrType="ID",useMetaFeatures=FALSE, allowMultiOverlap=TRUE)
-fcexo<-featureCounts(files=targets$OutputFile,annot.ext=anno_for_featurecount,strandSpecific=strandspecific,
-                    isGTFAnnotationFile=TRUE,GTF.featureType="exon",GTF.attrType="exon_id",nthreads=8,
-                    isPairedEnd=isPairedEnd,useMetaFeatures=FALSE, allowMultiOverlap=TRUE)
+# Splicing analysis
+countsExons <-featureCounts(files=paste0("Alignments/",targets$OutputFile),annot.inbuilt=genome,nthreads=threads,strandSpecific=strandspecific,isPairedEnd=isPairedEnd,GTF.featureType="exon", GTF.attrType="ID",
+                      useMetaFeatures=FALSE, allowMultiOverlap=TRUE)
 
-dge <- DGEList(counts=fcexo$counts, genes=fcexo$annotation)
+dgeList <- DGEList(counts=countsExons$counts, genes=countsExons$annotation)
 
-A <- rowSums(dge$counts)
-dge <- dge[A>10,,keep.lib.sizes=FALSE]
-dge <- calcNormFactors(dge)
+sums <- rowSums(dgeList$counts)
+dgeList <- dgeList[sums>10,,keep.lib.sizes=FALSE]
+dgeList <- calcNormFactors(dgeList)
 
+if (is.null(factor2))
+{
 design <- model.matrix(~targets$Group)
-v <- voom(dge,design,plot=TRUE)
- fit <- lmFit(v,design)
+} else {
+  design <- model.matrix(~targets$Group1 + targets$Group2 )
+  
+}
 
-ex <- diffSplice(fit, geneid="GeneID")
+voomOut <- voom(dgeList,design,plot=TRUE)
+fit <- lmFit(voomOut,design)
+
+spliceOut <- diffSplice(fit, geneid="GeneID")
 
 
-spliced<-topSplice(ex,coef=2,test="F")
+spliced<-topSplice(spliceOut,coef=2,test="F")
 
-altUsed<-topSplice(ex,coef=2,test="t")
+altUsed<-topSplice(spliceOut,coef=2,test="t")
 
-write.table(spliced,file="AltSplicedgenes.txt",sep="\t")
-write.table(altUsed,file="DiffUsedExons.txt",sep="\t")
+write.table(spliced,file=paste0("Splicing/","AltSplicedgenes.txt"),sep="\t")
+write.table(altUsed,file=paste0("Splicing/","DiffUsedExons.txt"),sep="\t")
 
 # functional analysis for DE genes
-  library(goseq)
-  
-  newX<- resOrdered[complete.cases(resOrdered$padj),]
-  degenes<-as.integer(newX$padj<0.05)
-  names(degenes)<-rownames(newX)
-  # remove duplicate gene names
-  degenes<-degenes[match(unique(names(degenes)),names(degenes))]
-  table(degenes)
-  # GO and kegg analysis
-  # (1) fitting the probability weighting function (PWF)
-    pwf=nullp(degenes,genome,'ensGene')
-    # nullp: probability weighting function
-  # (2) Using the Wallenius approximation
-    # change the Keggpath id to name in the goseq output
-    library(KEGG.db)
-    xx <- as.list(KEGGPATHID2NAME)
-    temp <- cbind(names(xx),unlist(xx))
-    addKeggTogoseq <- function(JX,temp){
-      for(l in 1:nrow(JX)){
-        if(JX[l,1] %in% temp[,1]){
-          JX[l,"term"] <- temp[temp[,1] %in% JX[l,1],2]
-          JX[l,"ontology"] <- "KEGG"
-        }
-      }
-      return(JX)
+library(goseq)
+anno_version=genome;
+
+newX<- resOrdered[complete.cases(resOrdered$padj),]
+degenes<-as.integer(newX$padj<0.05)
+names(degenes)<-rownames(newX)
+# remove duplicate gene names
+degenes<-degenes[match(unique(names(degenes)),names(degenes))]
+table(degenes)
+# GO and kegg analysis
+# (1) fitting the probability weighting function (PWF)
+pwf=nullp(degenes,anno_version,'knownGene')
+# nullp: probability weighting function
+# (2) Using the Wallenius approximation
+# change the Keggpath id to name in the goseq output
+library(KEGG.db)
+xx <- as.list(KEGGPATHID2NAME)
+
+temp <- cbind(names(xx),unlist(xx))
+addKeggTogoseq <- function(JX,temp){
+  for(l in 1:nrow(JX)){
+    if(JX[l,1] %in% temp[,1]){
+      JX[l,"term"] <- temp[temp[,1] %in% JX[l,1],2]
+      JX[l,"ontology"] <- "KEGG"
     }
-    functional_analysis=goseq(pwf,genome,'ensGene',test.cats=c("GO:BP","GO:MF","KEGG"))
-    restemp<-addKeggTogoseq(functional_analysis,temp)    # switch Keggpathid to name
-    write.table(restemp,file="GO_Kegg_Wallenius.txt",row.names=F,sep="\t")
+  }
+  return(JX)
+}
+functional_analysis=goseq(pwf,anno_version,'knownGene',test.cats=c("GO:BP","GO:MF","KEGG"))
+restemp<-addKeggTogoseq(functional_analysis,temp)    # switch Keggpathid to name
+write.table(restemp,file=paste0("GeneOntology/","GO_Kegg_Wallenius.txt"),row.names=F,sep="\t")
+
+outnames<-c("countsExons","dds","dgeList","featureCountsobj","fit","res","resOrdered","spliceOut","voomOut","rld")
+save(list=outnames,file="analysis.RData")
 
 
 sessionInfo()
+

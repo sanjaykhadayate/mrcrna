@@ -1,11 +1,12 @@
 #file:config.r
 
-targets<-"targets.txt"
+samplesheet<-"targets.txt"
 genome<-"mm9" 
 strandspecific<-0 
 factor1<-"Group"
 factor2<-NULL 
-dir="/csc/rawdata/-----/Unalined/"
+rawdata="/Users/skhadaya/Documents/pipeline/"
 isPairedEnd<-TRUE
-resource<-"/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/"
-gtfresource="/csc/rawdata/Cscbioinf/bioinfResources/iGenomes/"
+resource<-"Index/"
+threads=2
+

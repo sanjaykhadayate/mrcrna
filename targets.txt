@@ -1,0 +1,10 @@
+sample	Group	InputFile	InputFile2	OutputFile
+B1	B	b1R1.fq.gz	b1R2.fq.gz	b1.bam
+B2	B	b2R1.fq.gz	b2R2.fq.gz	b2.bam
+B5	B	b5R1.fq.gz	b5R1.fq.gz	b5.bam
+D1	D	d1R1.fq.gz	d1R1.fq.gz	d1.bam
+D2	D	d2R1.fq.gz	d2R2.fq.gz	d2.bam
+D5	D	d5R1.fq.gz	d5R2.fq.gz	d5.bam
+I1	I	i1R1.fq.gz	i1R2.fq.gz	I1.bam
+I2	I	i2R1.fq.gz	i2R2.fq.gz	I1.bam
+I5	I	i3R1.fq.gz	i3R2.fq.gz	I3.bam
