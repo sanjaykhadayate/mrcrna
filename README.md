@@ -1,12 +1,12 @@
 # mrcrna
-pipeline for rnaseq analysis at CSC
+Pipeline for rnaseq data analysis at MRC LMS
 
 The pipeline performs spliced alignment using subreads aligner, counting using feature counts module of subreads package.
 
 It then performs differential gene expression analysis using deseq2 package. 
 It also performs differential splicing analysis using limma. Gene ontology and pathway analysis is performed using GoSeq package.
 
-How to run the pipeline
+**How to run the pipeline**
 
 Run the pipeline by executing following code using a jobscript.
          
